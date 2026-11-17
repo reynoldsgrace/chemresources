@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bohr model practice</title>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+:root{
+  color-scheme:light;
+  --ink:#000; --paper:#fff; --wash:#eef3fa; --gray:#9b9b9b;
+  --blue:#1d5bbf; --blue-soft:#dde8fa;
+  --ok:#17703a; --ok-soft:#dff3e5; --bad:#b0261c; --bad-soft:#fbe3e0;
+  --muted:#3d4550;
+}
+html,body{margin:0;background:var(--paper);color:var(--ink)}
+body{font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:18px;line-height:1.4;-webkit-text-size-adjust:100%}
+main{max-width:1040px;margin:0 auto;padding:10px 12px 16px}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;margin-bottom:12px}
+h1{font-size:1.65rem;margin:0;letter-spacing:-.01em}
+h2{font-size:1.2rem;margin:18px 0 8px}
+
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--ink);border-radius:10px;overflow:hidden}
+.seg button{font:inherit;font-size:1rem;font-weight:700;min-height:44px;padding:6px 14px;border:0;background:var(--paper);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:2px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+.ctl{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.ctl-label{font-weight:700}
+select{font:inherit;font-weight:700;min-height:44px;padding:4px 10px;border:2px solid var(--ink);border-radius:10px;background:#fff;color:var(--ink)}
+
+.status{grid-area:status;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 14px}
+.prompt{font-size:1.15rem;margin:0;max-width:34em}
+.score{color:var(--muted);font-size:1rem;display:flex;gap:14px;white-space:nowrap}
+
+/* worksheet card */
+.card{border:4px solid var(--ink);background:#fff;max-width:540px;margin:0 auto}
+.name-row{padding:10px 12px 0;min-height:58px;display:flex;align-items:center}
+.diagram{position:relative;width:100%;aspect-ratio:360/300}
+.diagram svg{position:absolute;inset:0;width:100%;height:100%}
+.tbl{display:grid;grid-template-columns:repeat(3,1fr);border-top:3px solid var(--ink)}
+.cell{border:1.5px solid var(--ink);min-height:94px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.cell.gray{background:var(--gray)}
+.cell-label{font-weight:700;font-size:clamp(.82rem,3.6vw,1rem);line-height:1.2;white-space:nowrap}
+
+/* fields */
+.f{position:relative;font-weight:700;font-size:clamp(1.2rem,4.8vw,1.65rem);line-height:1.2}
+.f.slot{position:absolute;transform:translate(-50%,-50%)}
+.f.slot.static,.f.slot.given{background:#fff;padding:0 .15em;border-radius:6px}
+.f.given{font-weight:400}
+.name-row .f{font-size:1.3rem}
+.name-row .f.given{font-weight:400}
+.f.static.blank.name-field::before{content:"";display:inline-block;width:9em;border-bottom:2px solid var(--ink);height:1.1em}
+.fbtn,.f input{font:inherit;color:var(--ink);background:#fff;border:2px dashed var(--blue);border-radius:8px;min-height:1.75em;text-align:center}
+.fbtn{min-width:2.4em;padding:0 .3em;cursor:pointer;touch-action:manipulation}
+.fbtn.filled{border-style:solid;border-color:var(--ink)}
+.f input{width:2.7em;padding:0 .1em}
+.name-field .fbtn{min-width:9em;text-align:left;padding:0 .4em}
+.name-field input{width:11em;text-align:left;padding:0 .4em}
+.f.sel .fbtn{background:var(--blue-soft);border:3px solid var(--blue)}
+.f.over .fbtn{background:var(--blue-soft);border:3px solid var(--blue)}
+.f.ok .fbtn,.f.ok input{border:3px solid var(--ok);background:var(--ok-soft)}
+.f.bad .fbtn,.f.bad input{border:3px solid var(--bad);background:var(--bad-soft)}
+.f.ok::after,.f.bad::after{position:absolute;top:-.5em;right:-.55em;width:1.5em;height:1.5em;border-radius:50%;display:grid;place-items:center;font-size:.72em;border:2px solid #fff;color:#fff;pointer-events:none;font-weight:700}
+.f.ok::after{content:"✓";background:var(--ok)}
+.f.bad::after{content:"✗";background:var(--bad)}
+
+/* answer dock */
+.dock{border:2px solid var(--ink);border-radius:12px;background:var(--wash);padding:12px}
+.hint{margin:0 0 10px;font-size:1rem;color:var(--muted)}
+.dock .hint:last-child{margin-bottom:0}
+.tray{display:flex;flex-wrap:wrap;gap:9px}
+.tray+.tray{margin-top:10px}
+.tile{font:inherit;font-weight:700;font-size:1.45rem;min-width:54px;height:54px;padding:0 10px;border:2px solid var(--ink);border-radius:10px;background:#fff;color:var(--ink);box-shadow:0 3px 0 var(--ink);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.tile.el{font-size:1.1rem}
+.tile[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 3px 0 #0d3a80}
+.ghost{position:fixed;z-index:50;pointer-events:none;transform:translate(-50%,-65%);box-shadow:0 10px 20px rgba(0,0,0,.25);margin:0}
+.tile:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.btn{font:inherit;font-weight:700;min-height:50px;padding:8px 18px;border:2px solid var(--ink);border-radius:10px;background:#fff;color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.dark{background:var(--ink);color:#fff}
+.btn.push{margin-left:auto}
+#feedback{margin:0;min-height:1.5em;font-size:1.1rem;font-weight:700}
+#feedback.is-ok{color:var(--ok)}
+#feedback.is-bad{color:var(--bad)}
+
+details{border-top:2px solid var(--ink);padding-top:4px}
+summary{font-weight:700;cursor:pointer;min-height:44px;display:flex;align-items:center}
+details ul{margin:4px 0 0;padding-left:1.2em}
+details li{margin-bottom:4px}
+
+
+.layout{display:grid;gap:12px;grid-template-areas:"head" "status" "work" "side"}
+header{grid-area:head;margin:0}
+.work{grid-area:work}
+.side{grid-area:side;display:flex;flex-direction:column;gap:12px;width:100%;max-width:540px;margin:0 auto}
+.name-row .tag{margin-left:auto;font-size:.95rem;font-weight:700;color:#fff;background:var(--blue);padding:2px 10px;border-radius:6px}
+.card.key{border-color:var(--blue)}
+@media (min-width:720px){
+  main{padding:8px 12px}
+  .layout{grid-template-columns:auto minmax(280px,380px);grid-template-rows:auto auto 1fr;grid-template-areas:"work head" "work status" "work side";column-gap:20px;row-gap:10px;align-items:start;justify-content:center}
+  header{flex-wrap:nowrap}
+  h1{font-size:1.2rem}
+  .ctl-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .seg button{min-height:38px;padding:4px 10px}
+  .prompt{font-size:1.02rem}
+  .card{width:clamp(300px,min(calc((100vh - 212px) * 1.2),calc(100vw - 440px)),660px);margin:0}
+  .name-row{min-height:42px;padding:4px 12px 0}
+  .cell{min-height:0;padding:4px;gap:2px}
+  .cell-label{font-size:.9rem}
+  .cell .fbtn,.cell input{min-height:1.45em}
+  .side{max-width:none;margin:0;gap:10px}
+  .dock{padding:10px}
+  .hint{font-size:.92rem;margin-bottom:8px}
+  .tray{gap:7px}
+  .tray+.tray{margin-top:8px}
+  .tile{min-width:40px;height:42px;font-size:1.2rem;padding:0 6px}
+  .tray.els{display:grid;grid-template-columns:1fr 1fr}
+  .tile.el{font-size:.98rem;height:38px}
+  header{gap:10px}
+  h1{white-space:nowrap}
+  .seg{flex-wrap:nowrap}
+  .seg button{white-space:nowrap}
+  .btn{min-height:40px}
+  #feedback:empty{display:none}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .btn{min-height:44px;padding:6px 10px}
+  .btn.push{margin-left:0}
+  #feedback{font-size:1rem}
+}
+@media (max-width:420px){
+  body{font-size:17px}
+  .cell{min-height:86px}
+  .btn{padding:8px 13px}
+  .btn.push{margin-left:0}
+}
+@media (prefers-reduced-motion:no-preference){
+  .f.ok::after,.f.bad::after{animation:pop .18s ease-out}
+}
+@keyframes pop{from{transform:scale(.3)}to{transform:scale(1)}}
+</style>
+</head>
+<body>
+<main>
+
+  <section id="practice" class="layout">
+  <header>
+      <h1>Bohr model practice</h1>
+      <div class="ctl">
+        <span class="ctl-label" id="modeLbl">Answer with</span>
+        <div class="seg" id="modeSeg" role="group" aria-labelledby="modeLbl">
+          <button type="button" data-v="drag">Drag tiles</button>
+          <button type="button" data-v="type">Typing</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="status">
+      <p class="prompt" id="prompt"></p>
+      <div class="score"><span id="solved"></span><span id="streak"></span></div>
+    </div>
+
+    <div class="work">
+      <div id="cardHost"></div>
+      <div id="keyHost" hidden></div>
+    </div>
+
+    <div class="side">
+      <div id="dock" class="dock"></div>
+      <div class="actions">
+        <button type="button" class="btn primary" id="checkBtn">Check</button>
+        <button type="button" class="btn" id="keyBtn">Show answer</button>
+        <button type="button" class="btn" id="clearBtn">Clear</button>
+        <button type="button" class="btn dark push" id="newBtn">New problem</button>
+      </div>
+      <p id="feedback" aria-live="polite"></p>
+      <details>
+        <summary>How the numbers fit together</summary>
+        <ul>
+          <li>Protons = atomic number. The nucleus charge is +protons.</li>
+          <li>In a neutral atom, total electrons = protons.</li>
+          <li>Fill shells from the inside out: 2, then 8, then 8. Leave a shell blank if it has no electrons.</li>
+          <li>Valence electrons are the electrons in the outermost shell.</li>
+          <li>Shielding electrons are the electrons on the inside energy levels.</li>
+          <li>Z<sub>eff</sub> = protons − shielding electrons.</li>
+        </ul>
+      </details>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+const EL=[["H","Hydrogen"],["He","Helium"],["Li","Lithium"],["Be","Beryllium"],["B","Boron"],["C","Carbon"],["N","Nitrogen"],["O","Oxygen"],["F","Fluorine"],["Ne","Neon"],["Na","Sodium"],["Mg","Magnesium"],["Al","Aluminum"],["Si","Silicon"],["P","Phosphorus"],["S","Sulfur"],["Cl","Chlorine"],["Ar","Argon"],["K","Potassium"],["Ca","Calcium"]];
+const ALIAS={aluminium:13,sulphur:16};
+const LABELS={name:"Element",nucleus:"Nucleus charge",s1:"Shell 1 (innermost)",s2:"Shell 2",s3:"Shell 3",s4:"Shell 4 (outermost)",total:"Total electrons",valence:"Valence electrons",protons:"Protons",shielding:"Shielding electrons",zeff:"Effective nuclear charge"};
+const KEYS=["name","nucleus","s1","s2","s3","s4","total","valence","protons","shielding","zeff"];
+const SHELLS=["s1","s2","s3","s4"];
+const CHARGE=new Set(["nucleus","zeff"]);
+const CLUESETS=[["total","protons","zeff"],["protons","valence"],["total","shielding"],["protons","shielding","zeff"]];
+const G={w:360,h:300,cx:55,cy:250,nr:40,radii:[82,134,186,238],ang:[-22,-40,-58,-76]};
+
+const elName=z=>`${EL[z-1][1]} (${EL[z-1][0]})`;
+function answers(z){
+  const sh=[];let r=z;
+  for(const c of [2,8,8,8]){const n=Math.min(c,r);sh.push(n);r-=n;}
+  const val=sh.filter(n=>n>0).pop();
+  return {name:z,nucleus:z,s1:sh[0],s2:sh[1],s3:sh[2],s4:sh[3],total:z,valence:val,protons:z,shielding:z-val,zeff:val};
+}
+
+const S={view:"practice",mode:"drag",ptype:"mix",range:[1,20],prob:null,ans:null,vals:{},marks:{},sel:null,tile:null,showKey:false,solved:0,streak:0,counted:false,peeked:false,lastZ:0};
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+function h(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
+function normNum(v){
+  if(v==null)return null; if(typeof v==="number")return v;
+  const t=String(v).trim().replace(/[−–—]/g,"-").replace(/\s/g,"").replace(/^\+/,"");
+  if(t==="")return null; if(!/^-?\d+$/.test(t))return NaN; return parseInt(t,10);
+}
+function normZ(v){
+  if(v==null)return null; if(typeof v==="number")return v;
+  const t=String(v).trim().toLowerCase(); if(t==="")return null;
+  const m=t.match(/^([a-z]+)\s*(?:\(\s*([a-z]{1,2})\s*\))?$/); if(!m)return NaN;
+  let z=ALIAS[m[1]]||0;
+  if(!z){const i=EL.findIndex(e=>e[1].toLowerCase()===m[1]||e[0].toLowerCase()===m[1]);z=i+1;}
+  if(!z)return NaN;
+  if(m[2]&&EL[z-1][0].toLowerCase()!==m[2])return NaN;
+  return z;
+}
+const norm=(k,v)=>k==="name"?normZ(v):normNum(v);
+function fmt(k,v){
+  if(v==null||(typeof v==="number"&&isNaN(v)))return "";
+  if(typeof v==="string")return v;
+  if(k==="name")return v>=1&&v<=20?elName(v):"";
+  if(CHARGE.has(k))return v>0?"+"+v:v<0?"−"+(-v):"0";
+  return String(v);
+}
+const editable=()=>KEYS.filter(k=>!S.prob.given.includes(k));
+const rand=n=>Math.floor(Math.random()*n);
+
+/* ---------- problem flow ---------- */
+function newProblem(){
+  const [a,b]=S.range; let z;
+  do{z=a+rand(b-a+1);}while(z===S.lastZ&&b>a);
+  S.lastZ=z;
+  const type=S.ptype==="mix"?(rand(2)?"name":"clues"):S.ptype;
+  const given=type==="name"?["name"]:CLUESETS[rand(CLUESETS.length)].slice();
+  if(S.prob&&!S.counted&&!S.peeked&&Object.keys(S.vals).length)S.streak=0;
+  S.prob={z,type,given};S.ans=answers(z);
+  S.vals={};S.marks={};S.sel=null;S.tile=null;S.showKey=false;S.counted=false;S.peeked=false;
+  setFeedback("");
+  render();
+}
+function setVal(k,v){S.vals[k]=v;delete S.marks[k];render();}
+function check(){
+  let right=0,empty=0,missingSign=0;const keys=editable();
+  for(const k of keys){
+    const raw=S.vals[k];let v=norm(k,raw);
+    if(v==null&&SHELLS.includes(k))v=0;
+    const noSign=CHARGE.has(k)&&typeof raw==="string"&&v!=null&&S.ans[k]>0&&!/^\s*\+/.test(raw);
+    if(v==null){empty++;S.marks[k]="bad";}
+    else if(noSign){missingSign++;S.marks[k]="bad";}
+    else if(v===S.ans[k]){right++;S.marks[k]="ok";}
+    else S.marks[k]="bad";
+  }
+  if(right===keys.length){
+    if(!S.counted&&!S.peeked){S.solved++;S.streak++;S.counted=true;}
+    setFeedback("Everything checks out. Try a new problem.","ok");
+  }else{
+    let msg=`${right} of ${keys.length} correct. Fix the ✗ blanks.`;
+    if(empty)msg+=` ${empty} still empty.`;
+    if(missingSign)msg+=" Charges need a + sign.";
+    setFeedback(msg,"bad");
+  }
+  render();
+}
+function setFeedback(t,kind){const f=$("#feedback");f.textContent=t;f.className=kind?"is-"+kind:"";}
+
+/* ---------- card ---------- */
+function svgFor(o){
+  let s=`<svg viewBox="0 0 ${G.w} ${G.h}" aria-hidden="true">`;
+  if(!o.empty){
+    G.radii.forEach((r,i)=>{
+      if(o.hideEmpty&&!o.ans["s"+(i+1)])return;
+      const ex=G.cx+r*Math.cos(6*Math.PI/180),ey=G.cy+r*Math.sin(6*Math.PI/180);
+      s+=`<path d="M${G.cx} ${G.cy-r} A${r} ${r} 0 0 1 ${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>`;
+    });
+    s+=`<circle cx="${G.cx}" cy="${G.cy}" r="${G.nr}" fill="#fff" stroke="#000" stroke-width="3"/>`;
+  }
+  return s+"</svg>";
+}
+function place(el,x,y){el.style.left=(x/G.w*100)+"%";el.style.top=(y/G.h*100)+"%";return el;}
+
+function makeField(k,o,cls){
+  const w=h("div","f "+cls);w.dataset.key=k;
+  if(o.prob.given.includes(k)){w.classList.add("given");w.textContent=fmt(k,o.ans[k]);return w;}
+  if(!o.interactive){
+    const v=o.vals[k];w.classList.add("static");
+    if(v==null||(SHELLS.includes(k)&&!v)){w.classList.add("blank");}else w.textContent=fmt(k,v);
+    return w;
+  }
+  if(S.marks[k])w.classList.add(S.marks[k]);
+  const v=S.vals[k];
+  if(S.mode==="type"){
+    const inp=document.createElement("input");
+    inp.value=v==null?"":(typeof v==="number"?fmt(k,v):v);
+    inp.setAttribute("aria-label",LABELS[k]);
+    inp.autocomplete="off";inp.spellcheck=false;
+    if(k==="name"){inp.type="text";inp.setAttribute("autocapitalize","words");inp.placeholder="Name (Symbol)";}
+    else{inp.type="text";inp.inputMode=CHARGE.has(k)?"text":"numeric";inp.maxLength=3;}
+    inp.addEventListener("input",()=>{S.vals[k]=inp.value;delete S.marks[k];w.classList.remove("ok","bad");});
+    inp.addEventListener("keydown",e=>{
+      if(e.key==="Enter"){e.preventDefault();const all=[...document.querySelectorAll("#cardHost input")];const nx=all[all.indexOf(inp)+1];nx?nx.focus():$("#checkBtn").focus();}
+    });
+    w.append(inp);return w;
+  }
+  const b=document.createElement("button");b.type="button";b.className="fbtn";
+  const txt=fmt(k,v);if(txt)b.classList.add("filled");
+  b.textContent=txt||"\u00a0";
+  b.dataset.refocus="f:"+k;
+  {
+    b.setAttribute("aria-label",`${LABELS[k]}: ${txt||"empty"}`);
+    b.addEventListener("click",()=>{
+      if(S.tile){
+        if((S.tile.kind==="el")!==(k==="name")){setFeedback(S.tile.kind==="el"?"Element tiles go in the element blank.":"Number tiles go in the diagram and table.","bad");return;}
+        setVal(k,S.tile.v);
+      }else if(v!=null)setVal(k,null);
+    });
+  }
+  w.append(b);return w;
+}
+function cell(k,label,o){const c=h("div","cell");c.append(h("div","cell-label",label),makeField(k,o,""));return c;}
+function buildCard(o){
+  const card=h("div","card");
+  const nr=h("div","name-row");nr.append(makeField("name",o,"name-field"));card.append(nr);
+  const d=h("div","diagram");d.innerHTML=svgFor(o);
+  if(!o.empty){
+    d.append(place(makeField("nucleus",o,"slot nuc"),G.cx,G.cy));
+    SHELLS.forEach((k,i)=>{
+      if(o.hideEmpty&&!o.ans[k])return;
+      const a=G.ang[i]*Math.PI/180,r=G.radii[i];
+      d.append(place(makeField(k,o,"slot"),G.cx+r*Math.cos(a),G.cy+r*Math.sin(a)));
+    });
+  }
+  card.append(d);
+  const t=h("div","tbl");
+  t.append(cell("total","Total e<sup>−</sup>",o),h("div","cell gray"),cell("valence","Valence e<sup>−</sup>",o),
+           cell("protons","Protons",o),cell("shielding","Shielding e<sup>−</sup>",o),cell("zeff","Z<sub>eff</sub>",o));
+  card.append(t);
+  return card;
+}
+
+/* ---------- dock ---------- */
+let drag=null,justDragged=0;
+function slotAt(x,y,kind){
+  const el=document.elementFromPoint(x,y);
+  const f=el&&el.closest("#cardHost .f[data-key]");
+  if(!f||f.classList.contains("given"))return null;
+  if((kind==="el")!==(f.dataset.key==="name"))return null;
+  return f;
+}
+function makeTile(payload,label){
+  const t=h("button","tile"+(payload.kind==="el"?" el":""));t.type="button";t.textContent=label;
+  t.dataset.refocus="t:"+payload.kind+payload.v;
+  const on=S.tile&&S.tile.kind===payload.kind&&S.tile.v===payload.v;
+  t.setAttribute("aria-pressed",on?"true":"false");
+  t.addEventListener("click",()=>{if(Date.now()-justDragged<400)return;S.tile=on?null:payload;render();});
+  t.addEventListener("pointerdown",e=>{
+    if(e.pointerType==="mouse"&&e.button!==0)return;
+    drag={x:e.clientX,y:e.clientY,payload,tile:t,ghost:null,over:null};
+    try{t.setPointerCapture(e.pointerId);}catch(_){}
+  });
+  t.addEventListener("pointermove",e=>{
+    if(!drag||drag.tile!==t)return;
+    if(!drag.ghost){
+      if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<8)return;
+      const g=t.cloneNode(true);g.classList.add("ghost");g.removeAttribute("data-refocus");document.body.append(g);drag.ghost=g;
+    }
+    e.preventDefault();
+    drag.ghost.style.left=e.clientX+"px";drag.ghost.style.top=e.clientY+"px";
+    const f=slotAt(e.clientX,e.clientY,payload.kind);
+    if(f!==drag.over){if(drag.over)drag.over.classList.remove("over");if(f)f.classList.add("over");drag.over=f;}
+  });
+  const end=e=>{
+    if(!drag||drag.tile!==t)return;const d=drag;drag=null;
+    if(!d.ghost)return;
+    d.ghost.remove();justDragged=Date.now();
+    if(d.over){d.over.classList.remove("over");if(e.type==="pointerup")setVal(d.over.dataset.key,payload.v);}
+  };
+  t.addEventListener("pointerup",end);t.addEventListener("pointercancel",end);
+  return t;
+}
+function renderDock(){
+  const dock=$("#dock");dock.replaceChildren();
+  if(S.mode==="drag"){
+    dock.append(h("p","hint","Drag a tile onto a blank, or tap a tile, then a blank. Tap a filled blank to clear it."));
+    const keys=editable();const nums=new Set([0]);
+    keys.filter(k=>k!=="name").forEach(k=>nums.add(S.ans[k]));
+    if(!S.distract||S.distract.z!==S.prob.z){const ex=[];[...nums].forEach(v=>{const n=v+(rand(2)?1:-1);if(n>=0&&n<=20)ex.push(n);});S.distract={z:S.prob.z,ex};}
+    S.distract.ex.forEach(n=>nums.add(n));
+    for(let n=0;nums.size<6;n++)nums.add(n);
+    const tray=h("div","tray");
+    [...nums].sort((a,b)=>a-b).forEach(n=>tray.append(makeTile({kind:"num",v:n},String(n))));
+    dock.append(tray);
+    if(keys.includes("name")){
+      const z=S.prob.z,pool=[];
+      for(let d=-3;d<=3;d++){const c=z+d;if(c>=1&&c<=20&&c!==z)pool.push(c);}
+      pool.sort(()=>Math.random()-.5);
+      if(!S.elChoices||S.elChoices.z!==z)S.elChoices={z,list:[z,...pool.slice(0,3)].sort((a,b)=>a-b)};
+      const et=h("div","tray els");
+      S.elChoices.list.forEach(c=>et.append(makeTile({kind:"el",v:c},elName(c))));
+      dock.append(et);
+    }
+  }else if(S.mode==="type"){
+    dock.append(h("p","hint","Tap a blank and type. Put a + sign in front of the nucleus charge and Z<sub>eff</sub>, like +6. For the element, type the name or symbol. Press Enter to jump to the next blank."));
+  }
+}
+
+/* ---------- render ---------- */
+function render(){
+  const act=document.activeElement,ref=act&&act.dataset?act.dataset.refocus:null;
+  const p=S.prob;
+  $("#prompt").textContent=p.type==="name"
+    ? `Build the Bohr model for ${EL[p.z-1][1]} and fill in the table.`
+    : "Use the clues in the table to name the element, then finish the model and table.";
+  $("#solved").textContent=`Solved: ${S.solved}`;
+  $("#streak").textContent=`Streak: ${S.streak}`;
+  $("#cardHost").replaceChildren(buildCard({prob:p,ans:S.ans,interactive:true}));
+  renderDock();
+  const kh=$("#keyHost");kh.replaceChildren();
+  $("#keyBtn").textContent=S.showKey?"Back to my work":"Show answer";
+  kh.hidden=!S.showKey;$("#cardHost").hidden=S.showKey;
+  if(S.showKey){
+    const kc=buildCard({prob:p,ans:S.ans,vals:S.ans,interactive:false,hideEmpty:true});
+    kc.classList.add("key");kc.querySelector(".name-row").append(h("span","tag","Answer key"));
+    kh.append(kc);
+    const d=$("#dock");d.replaceChildren(h("p","hint","This is the answer key. Compare it with your work, then select Back to my work."));
+  }
+  segState();
+  if(ref){const t=document.querySelector(`[data-refocus="${ref}"]`);if(t)t.focus({preventScroll:true});}
+}
+function segState(){
+  [["#modeSeg",S.mode]].forEach(([sel,v])=>{
+    document.querySelectorAll(sel+" button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===v?"true":"false"));
+  });
+}
+
+/* ---------- controls ---------- */
+$("#modeSeg").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b||b.dataset.v===S.mode)return;
+  const next=b.dataset.v;
+  for(const k of Object.keys(S.vals)){
+    const n=norm(k,S.vals[k]);
+    S.vals[k]=next==="type"?(n==null||isNaN(n)?(typeof S.vals[k]==="string"?S.vals[k]:null):fmt(k,n)):(n==null||isNaN(n)?null:n);
+  }
+  S.mode=next;S.tile=null;S.sel=null;render();
+});
+$("#checkBtn").addEventListener("click",check);
+$("#keyBtn").addEventListener("click",()=>{
+  S.showKey=!S.showKey;
+  if(S.showKey&&!S.counted){S.peeked=true;S.streak=0;}
+  render();
+});
+$("#clearBtn").addEventListener("click",()=>{S.vals={};S.marks={};setFeedback("");render();});
+$("#newBtn").addEventListener("click",newProblem);
+
+newProblem();
+})();
+</script>
+</body>
+</html>
