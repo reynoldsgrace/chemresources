@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Subatomic Particles Practice</title>
+<style>
+  :root {
+    --paper: #ffffff;
+    --ink: #1b2a41;
+    --muted: #5a6880;
+    --line: #c9d3e3;
+    --head: #eef2f9;
+    --accent: #2457c5;
+    --accent-dark: #1a3f91;
+    --good: #1e7a3c;
+    --good-bg: #e3f4e8;
+    --bad: #b42318;
+    --bad-bg: #fde8e6;
+    --reveal: #7a4b00;
+    --reveal-bg: #fff4d6;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink); }
+  body {
+    font-family: Roboto, "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    font-size: 20px;
+    line-height: 1.4;
+    padding: 16px;
+  }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 16px; font-size: 1.05rem; }
+
+
+  .table-wrap { overflow-x: auto; border: 2px solid var(--ink); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; min-width: 820px; }
+  th, td { border: 1px solid var(--line); text-align: center; vertical-align: middle; }
+  th {
+    background: var(--head); font-size: 1rem; font-weight: 700;
+    padding: 10px 6px; line-height: 1.2;
+  }
+  td { padding: 12px 6px; height: 120px; font-size: 1.8rem; font-weight: 600; }
+  td.given { background: #fff; }
+
+  /* Nuclide notation: the visual centerpiece */
+  .nuc {
+    display: inline-flex; align-items: center;
+    font-family: Georgia, "Times New Roman", serif; font-weight: 400;
+  }
+  .nuc .left {
+    display: inline-flex; flex-direction: column; align-items: flex-end;
+    font-size: 1.4rem; line-height: 1.05; margin-right: 3px;
+  }
+  .nuc .el { font-size: 3.2rem; line-height: 1; }
+  .nuc .chg { align-self: flex-start; font-size: 1.4rem; margin-left: 2px; margin-top: -4px; }
+
+  td input {
+    font: inherit; font-size: 1.8rem; font-weight: 600; color: var(--ink);
+    width: 4.2ch; min-width: 76px; text-align: center;
+    padding: 6px 4px; border: 2px solid #8a98b3; border-radius: 6px; background: #fbfcff;
+  }
+  /* Four-box symbol: mass (top left), atomic # (bottom left), symbol (center), charge (top right) */
+  .nuc-in {
+    display: inline-grid; grid-template-columns: auto auto auto; grid-template-rows: auto auto;
+    column-gap: 4px; row-gap: 6px; align-items: center;
+  }
+  td .nuc-in input {
+    font-size: 1.3rem; width: 3.6ch; min-width: 56px; padding: 4px 2px;
+    border-style: dashed;
+  }
+  .nuc-in .in-A { grid-column: 1; grid-row: 1; }
+  .nuc-in .in-Z { grid-column: 1; grid-row: 2; }
+  td .nuc-in .in-sym {
+    grid-column: 2; grid-row: 1 / span 2; align-self: stretch;
+    font-family: Georgia, "Times New Roman", serif; font-size: 2.6rem;
+    width: 2.6ch; min-width: 84px;
+  }
+  .nuc-in .in-q { grid-column: 3; grid-row: 1; }
+  td input:focus { outline: 3px solid var(--accent); outline-offset: 2px; border-color: var(--accent); }
+  td input.correct { border-color: var(--good); background: var(--good-bg); color: var(--good); }
+  td input.wrong   { border-color: var(--bad);  background: var(--bad-bg);  color: var(--bad); }
+  td input.revealed { border-color: var(--reveal); background: var(--reveal-bg); color: var(--reveal); }
+  .mark { display: block; font-size: 1rem; font-weight: 700; margin-top: 6px; min-height: 1.3em; }
+  .mark.ok { color: var(--good); }
+  .mark.no { color: var(--bad); }
+
+  .buttons { display: flex; flex-wrap: wrap; gap: 12px; margin: 18px 0 10px; }
+  button {
+    font: inherit; font-size: 1.15rem; font-weight: 700; cursor: pointer;
+    padding: 12px 22px; border-radius: 8px; border: 2px solid var(--accent);
+  }
+  button:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+  .primary { background: var(--accent); color: #fff; }
+  .primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+  .secondary { background: #fff; color: var(--accent); }
+  .secondary:hover { background: var(--head); }
+
+  .feedback {
+    font-size: 1.25rem; font-weight: 700; padding: 12px 16px; border-radius: 8px;
+    min-height: 1.4em; margin-bottom: 12px;
+  }
+  .feedback:empty { padding: 0; }
+  .feedback.ok { background: var(--good-bg); color: var(--good); }
+  .feedback.no { background: var(--bad-bg); color: var(--bad); }
+  .feedback.info { background: var(--reveal-bg); color: var(--reveal); }
+
+  .score { font-size: 1.05rem; color: var(--muted); margin-bottom: 12px; }
+  .score b { color: var(--ink); }
+
+  details { border: 2px solid var(--line); border-radius: 8px; padding: 10px 14px; font-size: 1.05rem; }
+  summary { cursor: pointer; font-weight: 700; }
+  details ul { margin: 10px 0 4px; padding-left: 22px; }
+  details li { margin: 4px 0; }
+
+  @media (max-width: 600px) {
+    body { font-size: 18px; padding: 10px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    td input { transition: background-color .15s, border-color .15s; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Subatomic Particles Practice</h1>
+<p class="sub">Fill in every empty box, then press Check (or Enter).</p>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Symbol</th>
+        <th># of<br>neutrons</th>
+        <th># of<br>protons</th>
+        <th># of<br>electrons</th>
+        <th>Charge</th>
+        <th>Atomic #</th>
+        <th>Mass #</th>
+      </tr>
+    </thead>
+    <tbody><tr id="row"></tr></tbody>
+  </table>
+</div>
+
+<div class="buttons">
+  <button class="primary" id="checkBtn">Check</button>
+  <button class="secondary" id="newBtn">New problem</button>
+  <button class="secondary" id="showBtn">Show answers</button>
+</div>
+
+<div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+<div class="score" id="score"></div>
+
+<details>
+  <summary>Hints</summary>
+  <ul>
+    <li>Protons = Atomic #</li>
+    <li>Neutrons = Mass # − Atomic #</li>
+    <li>Mass # = Protons + Neutrons</li>
+    <li>Charge is like a game score: protons (+) play against electrons (−).
+      <ul>
+        <li>More protons than electrons → protons win → <b>positive</b> charge</li>
+        <li>More electrons than protons → electrons win → <b>negative</b> charge</li>
+        <li>Same number → tie → charge is 0 (neutral atom)</li>
+        <li>The charge is how much the winning team wins by. Example: 26 protons vs. 24 electrons → protons win by 2 → +2. 17 protons vs. 18 electrons → electrons win by 1 → −1.</li>
+      </ul>
+    </li>
+    <li>Write charges with a sign: +3, −2. A neutral atom has a charge of 0.</li>
+    <li>Element symbols: first letter capital, second letter lowercase (Fe, not FE).</li>
+    <li>In the symbol: mass # goes top left, atomic # bottom left, charge top right. Leave the charge box empty for a neutral atom.</li>
+  </ul>
+</details>
+
+<script>
+(function () {
+  // s = symbol, z = atomic number, a = mass numbers to choose from, c = common ion charges
+  var ELEMENTS = [
+    {s:"H",z:1,a:[1,2,3],c:[1,-1]}, {s:"He",z:2,a:[4,3],c:[]}, {s:"Li",z:3,a:[7,6],c:[1]},
+    {s:"Be",z:4,a:[9],c:[2]}, {s:"B",z:5,a:[11,10],c:[3]}, {s:"C",z:6,a:[12,13,14],c:[]},
+    {s:"N",z:7,a:[14,15],c:[-3]}, {s:"O",z:8,a:[16,17,18],c:[-2]}, {s:"F",z:9,a:[19],c:[-1]},
+    {s:"Ne",z:10,a:[20,22],c:[]}, {s:"Na",z:11,a:[23],c:[1]}, {s:"Mg",z:12,a:[24,25,26],c:[2]},
+    {s:"Al",z:13,a:[27],c:[3]}, {s:"Si",z:14,a:[28,29,30],c:[]}, {s:"P",z:15,a:[31],c:[-3]},
+    {s:"S",z:16,a:[32,33,34],c:[-2]}, {s:"Cl",z:17,a:[35,37],c:[-1]}, {s:"Ar",z:18,a:[40],c:[]},
+    {s:"K",z:19,a:[39,41],c:[1]}, {s:"Ca",z:20,a:[40,44],c:[2]},
+    {s:"Sc",z:21,a:[45,44],c:[3]}, {s:"Ti",z:22,a:[48],c:[2,4]}, {s:"V",z:23,a:[51],c:[3]},
+    {s:"Cr",z:24,a:[52],c:[3]}, {s:"Mn",z:25,a:[55],c:[2]}, {s:"Fe",z:26,a:[56,54],c:[2,3]},
+    {s:"Co",z:27,a:[59],c:[2]}, {s:"Ni",z:28,a:[58,60],c:[2]}, {s:"Cu",z:29,a:[63,65],c:[1,2]},
+    {s:"Zn",z:30,a:[64,65,66],c:[2]}, {s:"Ga",z:31,a:[69,71],c:[3]}, {s:"Ge",z:32,a:[74],c:[]},
+    {s:"As",z:33,a:[75],c:[-3]}, {s:"Se",z:34,a:[80],c:[-2]}, {s:"Br",z:35,a:[79,81],c:[-1]},
+    {s:"Kr",z:36,a:[84],c:[]}
+  ];
+
+  var COLS = ["sym","n","p","e","q","z","A"];
+  var LABELS = {sym:"symbol", n:"neutrons", p:"protons", e:"electrons", q:"charge", z:"atomic number", A:"mass number"};
+
+  var row = document.getElementById("row");
+  var feedback = document.getElementById("feedback");
+  var scoreEl = document.getElementById("score");
+
+  var cur = null;        // current answers
+  var givens = {};       // which fields are shown
+  var attempted = false; // has Check been pressed on this problem
+  var finished = false;  // solved or revealed
+  var stats = { done: 0, firstTry: 0, streak: 0 };
+
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+  function fmtCharge(q) {
+    if (q === 0) return "0";
+    return (q > 0 ? "+" : "\u2212") + Math.abs(q);
+  }
+
+  function nuclideHTML(p) {
+    var chg = p.q === 0 ? "" : '<span class="chg">' + fmtCharge(p.q) + "</span>";
+    return '<span class="nuc" aria-label="' + p.sym + "-" + p.A + ", atomic number " + p.z +
+      (p.q ? ", charge " + fmtCharge(p.q) : "") + '">' +
+      '<span class="left"><span>' + p.A + "</span><span>" + p.z + "</span></span>" +
+      '<span class="el">' + p.sym + "</span>" + chg + "</span>";
+  }
+
+  function pool() { return ELEMENTS; } // elements 1–36
+
+  function newProblem() {
+    var el = pick(pool());
+    var A = pick(el.a);
+    var q = 0;
+    if (el.c.length && Math.random() < 0.7) q = pick(el.c);
+    cur = { sym: el.s, z: el.z, A: A, q: q, p: el.z, n: A - el.z, e: el.z - q };
+
+    givens = {};
+    if (Math.random() < 0.35) {
+      givens.sym = true;
+    } else {
+      // one clue for identity, one for mass, one for charge
+      givens[pick(["p","z"])] = true;
+      givens[pick(["A","n"])] = true;
+      givens[pick(["q","e"])] = true;
+    }
+    attempted = false;
+    finished = false;
+    render();
+    setFeedback("", "");
+  }
+
+  function makeInput(key, label, cls, maxLen, numeric) {
+    var inp = document.createElement("input");
+    inp.type = "text";
+    inp.autocomplete = "off";
+    inp.spellcheck = false;
+    inp.dataset.key = key;
+    inp.maxLength = maxLen;
+    if (numeric) inp.inputMode = "numeric";
+    if (cls) inp.className = cls;
+    inp.setAttribute("aria-label", label);
+    inp.addEventListener("input", function () {
+      inp.classList.remove("correct", "wrong");
+      inp.closest("td").querySelector(".mark").textContent = "";
+    });
+    return inp;
+  }
+
+  function render() {
+    row.innerHTML = "";
+    COLS.forEach(function (k) {
+      var td = document.createElement("td");
+      if (givens[k]) {
+        td.className = "given";
+        if (k === "sym") td.innerHTML = nuclideHTML(cur);
+        else td.textContent = k === "q" ? fmtCharge(cur.q) : cur[k];
+      } else {
+        if (k === "sym") {
+          var box = document.createElement("div");
+          box.className = "nuc-in";
+          box.appendChild(makeInput("symA", "mass number in symbol", "in-A", 3, true));
+          box.appendChild(makeInput("symZ", "atomic number in symbol", "in-Z", 3, true));
+          box.appendChild(makeInput("sym", "element symbol", "in-sym", 2, false));
+          box.appendChild(makeInput("symQ", "charge in symbol", "in-q", 3, false));
+          td.appendChild(box);
+        } else {
+          td.appendChild(makeInput(k, LABELS[k], "", 3, k !== "q"));
+        }
+        var mark = document.createElement("span");
+        mark.className = "mark";
+        td.appendChild(mark);
+      }
+      row.appendChild(td);
+    });
+    var first = row.querySelector("input");
+    if (first) first.focus();
+  }
+
+  function gradeCharge(v) {
+    var m = v.match(/^([+-]?)(\d+)([+-]?)$/);
+    if (!m || (m[1] && m[3])) return { ok: false, hint: "Use a form like +2" };
+    var num = parseInt(m[2], 10);
+    var sign = m[1] || m[3];
+    if (num !== 0 && !sign) return { ok: false, hint: "Add + or \u2212" };
+    var val = sign === "-" ? -num : num;
+    return { ok: val === cur.q };
+  }
+
+  // Returns {ok:bool, hint:string}
+  function grade(k, raw) {
+    var v = raw.trim().replace(/\u2212|\u2013/g, "-");
+    // In the symbol, a neutral atom shows no charge, so empty (or 0) is right
+    if (k === "symQ" && cur.q === 0 && (v === "" || /^[+-]?0[+-]?$/.test(v))) return { ok: true };
+    if (v === "") return { ok: false, hint: "Fill in every box" };
+    if (k === "sym") {
+      if (v === cur.sym) return { ok: true };
+      if (v.toLowerCase() === cur.sym.toLowerCase()) return { ok: false, hint: "Check capitals" };
+      return { ok: false };
+    }
+    if (k === "q" || k === "symQ") return gradeCharge(v);
+    if (!/^\d+$/.test(v)) return { ok: false, hint: "Numbers only" };
+    var target = k === "symA" ? cur.A : k === "symZ" ? cur.z : cur[k];
+    return { ok: parseInt(v, 10) === target };
+  }
+
+  function answerFor(k) {
+    if (k === "q") return fmtCharge(cur.q);
+    if (k === "symQ") return cur.q === 0 ? "" : fmtCharge(cur.q);
+    if (k === "symA") return String(cur.A);
+    if (k === "symZ") return String(cur.z);
+    return String(cur[k]);
+  }
+
+  function check() {
+    if (!cur) return;
+    if (finished) { newProblem(); return; }
+    var right = 0, total = 0;
+    row.querySelectorAll("td").forEach(function (td) {
+      var inputs = td.querySelectorAll("input");
+      if (!inputs.length) return;
+      var hint = null, cellOk = true;
+      inputs.forEach(function (inp) {
+        var r = grade(inp.dataset.key, inp.value);
+        total++;
+        inp.classList.remove("correct", "wrong", "revealed");
+        if (r.ok) { inp.classList.add("correct"); right++; }
+        else {
+          inp.classList.add("wrong");
+          cellOk = false;
+          if (!hint && r.hint) hint = r.hint;
+        }
+      });
+      var mark = td.querySelector(".mark");
+      mark.className = cellOk ? "mark ok" : "mark no";
+      mark.textContent = cellOk ? "\u2713 Correct" : "\u2717 " + (hint || "Try again");
+    });
+
+    if (right === total) {
+      finished = true;
+      stats.done++;
+      if (!attempted) { stats.firstTry++; stats.streak++; } else { stats.streak = 0; }
+      setFeedback(attempted ? "Correct! Press Enter for a new problem." :
+        "Correct on the first try! Press Enter for a new problem.", "ok");
+    } else {
+      setFeedback(right + " of " + total + " boxes correct. Fix the red boxes and check again.", "no");
+      var firstWrong = row.querySelector("input.wrong");
+      if (firstWrong) firstWrong.focus();
+    }
+    attempted = true;
+    updateScore();
+  }
+
+  function showAnswers() {
+    if (!cur || finished) return;
+    row.querySelectorAll("td").forEach(function (td) {
+      var inputs = td.querySelectorAll("input");
+      if (!inputs.length) return;
+      var changed = false;
+      inputs.forEach(function (inp) {
+        var k = inp.dataset.key;
+        if (!grade(k, inp.value).ok) {
+          inp.value = answerFor(k);
+          inp.classList.remove("correct", "wrong");
+          inp.classList.add("revealed");
+          changed = true;
+        }
+      });
+      if (changed) {
+        var mark = td.querySelector(".mark");
+        mark.className = "mark";
+        mark.textContent = "Answer";
+      }
+    });
+    finished = true;
+    stats.streak = 0;
+    updateScore();
+    setFeedback("Answers shown in yellow. Press Enter or New problem to keep practicing.", "info");
+  }
+
+  function setFeedback(text, kind) {
+    feedback.textContent = text;
+    feedback.className = "feedback" + (kind ? " " + kind : "");
+  }
+
+  function updateScore() {
+    scoreEl.innerHTML = "Solved: <b>" + stats.done + "</b> &nbsp; Correct on first try: <b>" +
+      stats.firstTry + "</b> &nbsp; Streak: <b>" + stats.streak + "</b>";
+  }
+
+  document.getElementById("checkBtn").addEventListener("click", check);
+  document.getElementById("newBtn").addEventListener("click", newProblem);
+  document.getElementById("showBtn").addEventListener("click", showAnswers);
+  row.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); check(); }
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && finished && e.target.tagName !== "BUTTON" && e.target.tagName !== "SELECT") {
+      e.preventDefault(); newProblem();
+    }
+  });
+
+  updateScore();
+  newProblem();
+})();
+</script>
+</body>
+</html>
